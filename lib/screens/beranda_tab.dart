@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/panenara_theme.dart';
+import '../helpers/dummy_data_helper.dart';
 import 'daftar_petani_screen.dart';
 import 'daftar_pembeli_screen.dart';
 
@@ -473,44 +474,20 @@ class BerandaTab extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    _auctionCard(
-                      context,
-                      'Beras Premium Cianjur',
-                      '250 Kg',
-                      'Rp 3.200.000',
-                      'Rp 2.950.000',
-                      '01:24:38',
-                      Colors.green,
-                      'Cianjur, Jawa Barat',
-                      'Poktan Sari Tani',
-                      imagePath: 'assets/images/commodity_beras.jpg',
-                    ),
-                    _auctionCard(
-                      context,
-                      'Cabai Merah Keriting',
-                      '100 Kg',
-                      'Rp 850.000',
-                      'Rp 720.000',
-                      '00:48:12',
-                      Colors.red,
-                      'Temanggung, Jawa Tengah',
-                      'Pak Slamet Riyadi',
-                      imagePath: 'assets/images/commodity_cabai.jpg',
-                    ),
-                    _auctionCard(
-                      context,
-                      'Jagung Pipil Kering',
-                      '500 Kg',
-                      'Rp 1.750.000',
-                      'Rp 1.600.000',
-                      '03:10:00',
-                      Colors.orange,
-                      'Grobogan, Jawa Tengah',
-                      'Kelompok Tani Makmur',
-                      imagePath: 'assets/images/commodity_jagung.jpg',
-                    ),
-                  ],
+                  children: DummyDataHelper.getLelangBerlangsungList()
+                      .map((item) => _auctionCard(
+                            context,
+                            item.title,
+                            item.weight,
+                            item.currentBid,
+                            item.startPrice,
+                            item.timeLeft,
+                            item.themeColor,
+                            item.location,
+                            item.seller,
+                            imagePath: item.imagePath,
+                          ))
+                      .toList(),
                 ),
               ),
 
@@ -526,37 +503,20 @@ class BerandaTab extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
-                  children: [
-                    _projectCard(
-                      context,
-                      'Padi Organik Ciherang',
-                      'Subang, Jawa Barat',
-                      'Rp 45.000.000',
-                      0.72,
-                      '72%',
-                      '14 - 16%',
-                    ),
-                    const SizedBox(height: 10),
-                    _projectCard(
-                      context,
-                      'Jagung Hibrida Bisi-18',
-                      'Grobogan, Jawa Tengah',
-                      'Rp 60.000.000',
-                      0.48,
-                      '48%',
-                      '16 - 19%',
-                    ),
-                    const SizedBox(height: 10),
-                    _projectCard(
-                      context,
-                      'Cabai Rawit Merah Prima',
-                      'Kediri, Jawa Timur',
-                      'Rp 30.000.000',
-                      0.88,
-                      '88%',
-                      '18 - 22%',
-                    ),
-                  ],
+                  children: DummyDataHelper.getProyekPanenList()
+                      .map((item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _projectCard(
+                              context,
+                              item.title,
+                              item.location,
+                              item.targetDana,
+                              item.progress,
+                              item.progressPercentage,
+                              item.roiRange,
+                            ),
+                          ))
+                      .toList(),
                 ),
               ),
 

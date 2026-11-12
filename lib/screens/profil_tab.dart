@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/panenara_theme.dart';
 import 'login_screen.dart';
+import 'notes_page.dart';
 import 'profile/edit_profil_screen.dart';
 import 'profile/alamat_saya_screen.dart';
 import 'profile/data_usaha_tani_screen.dart';
@@ -143,6 +144,18 @@ class ProfilTab extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => const DataUsahaTaniScreen()),
+                          );
+                        },
+                      ),
+                      _menuItem(
+                        context,
+                        Icons.edit_note_rounded,
+                        'Catatan Tani (SQLite)',
+                        'Kelola catatan panen & kegiatan',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const NotesPage()),
                           );
                         },
                       ),
