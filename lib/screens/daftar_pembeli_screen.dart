@@ -36,6 +36,56 @@ class _DaftarPembeliScreenState extends State<DaftarPembeliScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (UserSession.isPetani) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            icon: const Icon(Icons.block_rounded, color: Colors.orange, size: 44),
+            title: Text(
+              'Akses Dibatasi',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.bricolageGrotesque(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: PanenaraTheme.textDark,
+              ),
+            ),
+            content: Text(
+              'Akun Anda telah terdaftar sebagai Petani.\n\nSesuai aturan Panenara, akun Petani tidak dapat mendaftar ganda sebagai Pembeli.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.schibstedGrotesk(
+                fontSize: 13,
+                color: Colors.grey.shade700,
+                height: 1.4,
+              ),
+            ),
+            actions: [
+              Center(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: PanenaraTheme.primaryGreen,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Kembali ke Beranda', style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _companyController.dispose();
     super.dispose();

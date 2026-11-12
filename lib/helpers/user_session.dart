@@ -23,9 +23,20 @@ class UserSession {
   static bool get isPembeli => currentRole.value == UserRole.pembeli;
   static bool get isGuest => currentRole.value == UserRole.guest;
 
+  /// Pengecekan pendaftaran silang (Mutual Exclusivity)
+  /// - Petani dilarang mendaftar sebagai Pembeli.
+  /// - Pembeli dilarang mendaftar sebagai Petani.
+  static bool get canRegisterPetani => currentRole.value != UserRole.pembeli;
+  static bool get canRegisterPembeli => currentRole.value != UserRole.petani;
+
   /// Mengatur peran pengguna saat ini
   static void setRole(UserRole role) {
     currentRole.value = role;
+  }
+
+  /// Reset sesi peran kembali ke guest (misal saat logout)
+  static void resetSession() {
+    currentRole.value = UserRole.guest;
   }
 
   /// Label nama peran yang mudah dibaca

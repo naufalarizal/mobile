@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/panenara_theme.dart';
+import '../helpers/user_session.dart';
 import 'login_screen.dart';
 import 'notes_page.dart';
 import 'profile/edit_profil_screen.dart';
@@ -47,42 +48,56 @@ class ProfilTab extends StatelessWidget {
                       child: const Icon(Icons.person_rounded, size: 44, color: Colors.white),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'Budi Santoso',
-                      style: GoogleFonts.bricolageGrotesque(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: PanenaraTheme.goldAccent.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: PanenaraTheme.goldAccent.withValues(alpha: 0.4)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.verified_rounded, size: 12, color: PanenaraTheme.goldAccent),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Petani Terverifikasi',
-                                style: GoogleFonts.schibstedGrotesk(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: PanenaraTheme.goldAccent,
-                                ),
+                    ValueListenableBuilder<UserRole>(
+                      valueListenable: UserSession.currentRole,
+                      builder: (context, role, _) {
+                        final String displayName = role == UserRole.petani
+                            ? 'Budi Santoso'
+                            : (role == UserRole.pembeli ? 'Budi Santoso (Pembeli)' : 'Pengguna Panenara');
+                        final String roleLabel = UserSession.roleName;
+
+                        return Column(
+                          children: [
+                            Text(
+                              displayName,
+                              style: GoogleFonts.bricolageGrotesque(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: PanenaraTheme.goldAccent.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: PanenaraTheme.goldAccent.withValues(alpha: 0.4)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.verified_rounded, size: 12, color: PanenaraTheme.goldAccent),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        roleLabel,
+                                        style: GoogleFonts.schibstedGrotesk(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: PanenaraTheme.goldAccent,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 20),
 
@@ -270,6 +285,7 @@ class ProfilTab extends StatelessWidget {
                                   ),
                                   onPressed: () {
                                     Navigator.of(ctx).pop();
+                                    UserSession.resetSession();
                                     Navigator.of(context).pushAndRemoveUntil(
                                       MaterialPageRoute(builder: (_) => const LoginScreen()),
                                       (route) => false,

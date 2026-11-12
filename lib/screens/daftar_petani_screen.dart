@@ -25,6 +25,56 @@ class _DaftarPetaniScreenState extends State<DaftarPetaniScreen> {
   bool _selfieUploaded = false;
   bool _lahanUploaded = false;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (UserSession.isPembeli) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            icon: const Icon(Icons.block_rounded, color: Colors.orange, size: 44),
+            title: Text(
+              'Akses Dibatasi',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.bricolageGrotesque(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: PanenaraTheme.textDark,
+              ),
+            ),
+            content: Text(
+              'Akun Anda telah terdaftar sebagai Pembeli.\n\nSesuai aturan Panenara, akun Pembeli tidak dapat mendaftar ganda sebagai Petani.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.schibstedGrotesk(
+                fontSize: 13,
+                color: Colors.grey.shade700,
+                height: 1.4,
+              ),
+            ),
+            actions: [
+              Center(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: PanenaraTheme.primaryGreen,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Kembali ke Beranda', style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+  }
+
   void _nextStep() {
     if (_currentStep < _totalSteps) {
       setState(() => _currentStep++);
