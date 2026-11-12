@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/panenara_theme.dart';
+import '../helpers/user_session.dart';
 
 class DaftarPetaniScreen extends StatefulWidget {
   const DaftarPetaniScreen({super.key});
@@ -836,7 +837,19 @@ class _DaftarPetaniScreenState extends State<DaftarPetaniScreen> {
             height: 50,
             child: ElevatedButton(
               onPressed: () {
+                // Mengubah status akun menjadi Petani Terverifikasi (RBAC)
+                UserSession.setRole(UserRole.petani);
                 Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Pendaftaran berhasil! Akun Anda aktif sebagai Petani (Dapat melelang hasil tani).',
+                      style: GoogleFonts.schibstedGrotesk(color: Colors.white),
+                    ),
+                    backgroundColor: PanenaraTheme.primaryGreen,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: PanenaraTheme.primaryGreen,

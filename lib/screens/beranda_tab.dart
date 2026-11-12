@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/panenara_theme.dart';
 import '../helpers/dummy_data_helper.dart';
+import '../helpers/user_session.dart';
 import 'daftar_petani_screen.dart';
 import 'daftar_pembeli_screen.dart';
 
@@ -163,7 +164,7 @@ class BerandaTab extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(ctx);
-                      _showBidDialog(context, title, currentBid);
+                      _handleBidAttempt(context, title, currentBid);
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -187,6 +188,54 @@ class BerandaTab extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Memeriksa peran sebelum mengajukan penawaran lelang (RBAC)
+  /// Petani: TIDAK BISA membeli/menawar barang lelang.
+  /// Pembeli: BISA menawar barang lelang.
+  void _handleBidAttempt(BuildContext context, String title, String currentBid) {
+    if (UserSession.isPetani) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          icon: const Icon(Icons.block_rounded, color: Colors.orange, size: 44),
+          title: Text(
+            'Khusus Akun Pembeli',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.bricolageGrotesque(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: PanenaraTheme.textDark,
+            ),
+          ),
+          content: Text(
+            'Akun Anda terdaftar sebagai Petani. Petani hanya dapat melelang hasil panen sendiri dan tidak dapat membeli/menawar barang lelang.\n\nSilakan gunakan akun Pembeli untuk membeli komoditas lelang.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.schibstedGrotesk(
+              fontSize: 13,
+              color: Colors.grey.shade700,
+              height: 1.4,
+            ),
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: PanenaraTheme.primaryGreen,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Mengerti', style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    _showBidDialog(context, title, currentBid);
   }
 
   void _showBidDialog(BuildContext context, String title, String currentBid) {

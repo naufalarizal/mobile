@@ -1,7 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/panenara_theme.dart';
+import '../helpers/user_session.dart';
 
+/// ============================================================================
+/// MODUL 5: PASAR LELANG KOMODITAS & ROLE-BASED ACCESS CONTROL (RBAC)
+/// ============================================================================
+/// Mengatur hak akses peran sesuai instruksi:
+/// - Petani: BISA melakukan fitur melelang hasil tani, TIDAK BISA membeli barang lelang.
+/// - Pembeli: BISA mengikuti pelelangan (menawar/membeli), TIDAK BISA melelang barang.
+/// Menggunakan:
+/// - [TabBar] & [TabBarView] (Bab 5.2.5 Modul)
+/// - [FloatingActionButton] (Bab 4.2.2 Scaffold)
+/// - [AlertDialog] (Bab 5.2.1 Dialog)
+/// - [BottomSheet] (Bab 5.3.2 BottomSheet)
+/// - [SnackBar] (Bab 5.2.2 SnackBar)
+/// ============================================================================
 class LelangTab extends StatefulWidget {
   const LelangTab({super.key});
 
@@ -24,10 +38,381 @@ class _LelangTabState extends State<LelangTab> with SingleTickerProviderStateMix
     super.dispose();
   }
 
+  /// ── FITUR MELELANG HASIL TANI (Hanya untuk PETANI) ───────────
+  void _handleCreateAuctionAttempt() {
+    // Pengecekan Peran: Pembeli dilarang melelang barang
+    if (UserSession.isPembeli) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          icon: const Icon(Icons.block_rounded, color: Colors.orange, size: 44),
+          title: Text(
+            'Khusus Akun Petani',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.bricolageGrotesque(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: PanenaraTheme.textDark,
+            ),
+          ),
+          content: Text(
+            'Akun Anda terdaftar sebagai Pembeli. Pembeli hanya dapat mengikuti pelelangan barang dan tidak dapat melelang hasil tani.\n\nSilakan daftar sebagai Petani untuk memasang komoditas lelang Anda.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.schibstedGrotesk(
+              fontSize: 13,
+              color: Colors.grey.shade700,
+              height: 1.4,
+            ),
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: PanenaraTheme.primaryGreen,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Mengerti', style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Jika Petani (atau belum daftar / tamu): Buka formulir melelang hasil tani
+    _showCreateAuctionModal();
+  }
+
+  /// Modal formulir tambah komoditas lelang (Bab 5.3.2 BottomSheet)
+  void _showCreateAuctionModal() {
+    final titleCtrl = TextEditingController();
+    final qtyCtrl = TextEditingController();
+    final priceCtrl = TextEditingController();
+    final locationCtrl = TextEditingController(text: 'Cianjur, Jawa Barat');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          left: 20,
+          right: 20,
+          top: 20,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: PanenaraTheme.primaryGreen.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.add_business_rounded, color: PanenaraTheme.primaryGreen, size: 22),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Lelang Hasil Tani Anda',
+                    style: GoogleFonts.bricolageGrotesque(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: PanenaraTheme.textDark,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Pasang komoditas hasil panen Anda agar dapat ditawar oleh pembeli.',
+                style: GoogleFonts.schibstedGrotesk(fontSize: 12, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 16),
+
+              // 1. Nama Komoditas
+              TextField(
+                controller: titleCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Nama Komoditas (misal: Bawang Merah Brebes)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // 2. Jumlah / Berat
+              TextField(
+                controller: qtyCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Jumlah / Stok (misal: 350 Kg)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // 3. Harga Awal
+              TextField(
+                controller: priceCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Harga Awal Lelang (Rp)',
+                  prefixText: 'Rp ',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // 4. Lokasi Kebun
+              TextField(
+                controller: locationCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Lokasi Kebun / Lahan',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // Tombol Pasang
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final title = titleCtrl.text.trim();
+                    final qty = qtyCtrl.text.trim();
+                    final price = priceCtrl.text.trim();
+                    final loc = locationCtrl.text.trim();
+
+                    if (title.isEmpty || qty.isEmpty || price.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Harap lengkapi semua kolom lelang!',
+                            style: GoogleFonts.schibstedGrotesk(color: Colors.white),
+                          ),
+                          backgroundColor: Colors.red.shade700,
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Tambahkan ke daftar lelang aktif
+                    setState(() {
+                      _activeLelang.insert(0, {
+                        'title': title,
+                        'location': loc.isEmpty ? 'Jawa Barat' : loc,
+                        'icon': Icons.grass_rounded,
+                        'status': 'Berlangsung',
+                        'statusColor': Colors.green,
+                        'qty': qty,
+                        'startPrice': 'Rp $price',
+                        'bid': 'Rp $price',
+                        'time': '04:00:00',
+                        'buttonText': 'Ajukan Penawaran',
+                        'buttonColor': PanenaraTheme.primaryGreen,
+                      });
+                    });
+
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Hasil tani "$title" berhasil dilelang di pasar Panenara!',
+                          style: GoogleFonts.schibstedGrotesk(color: Colors.white),
+                        ),
+                        backgroundColor: PanenaraTheme.primaryGreen,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                  label: Text(
+                    'Pasang Lelang Sekarang',
+                    style: GoogleFonts.schibstedGrotesk(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: PanenaraTheme.primaryGreen,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// ── FITUR MENAWAR / MEMBELI LELANG (Hanya untuk PEMBELI) ─────
+  void _handleBidAttempt(Map<String, dynamic> data) {
+    // Pengecekan Peran: Petani dilarang membeli barang lelang
+    if (UserSession.isPetani) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          icon: const Icon(Icons.block_rounded, color: Colors.orange, size: 44),
+          title: Text(
+            'Khusus Akun Pembeli',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.bricolageGrotesque(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: PanenaraTheme.textDark,
+            ),
+          ),
+          content: Text(
+            'Akun Anda terdaftar sebagai Petani. Petani hanya dapat melelang hasil panen sendiri dan tidak dapat membeli/menawar barang lelang.\n\nGunakan akun Pembeli untuk membeli barang lelang.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.schibstedGrotesk(
+              fontSize: 13,
+              color: Colors.grey.shade700,
+              height: 1.4,
+            ),
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: PanenaraTheme.primaryGreen,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Mengerti', style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // Jika Pembeli (atau tamu): Buka dialog penawaran
+    final bidCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Ajukan Penawaran',
+          style: GoogleFonts.bricolageGrotesque(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              data['title'] as String,
+              style: GoogleFonts.schibstedGrotesk(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Tawaran saat ini: ${data['bid']}',
+              style: GoogleFonts.schibstedGrotesk(fontSize: 12, color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: bidCtrl,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                prefixText: 'Rp ',
+                hintText: 'Masukkan nominal tawaran Anda',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PanenaraTheme.primaryGreen,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () {
+              final newBid = bidCtrl.text.trim();
+              if (newBid.isEmpty) return;
+
+              setState(() {
+                data['bid'] = 'Rp $newBid';
+              });
+
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Tawaran Anda sebesar Rp $newBid berhasil diajukan!',
+                    style: GoogleFonts.schibstedGrotesk(color: Colors.white),
+                  ),
+                  backgroundColor: PanenaraTheme.primaryGreen,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            child: const Text('Kirim Tawaran', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F6F2),
+      // Floating Action Button untuk Petani memasang lelang baru
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: PanenaraTheme.primaryGreen,
+        elevation: 3,
+        icon: const Icon(Icons.add_business_rounded, color: Colors.white),
+        label: Text(
+          'Lelang Hasil Tani',
+          style: GoogleFonts.schibstedGrotesk(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        onPressed: _handleCreateAuctionAttempt,
+      ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -39,13 +424,41 @@ class _LelangTabState extends State<LelangTab> with SingleTickerProviderStateMix
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Pasar Lelang',
-                    style: GoogleFonts.bricolageGrotesque(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Pasar Lelang',
+                        style: GoogleFonts.bricolageGrotesque(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      // Indikator peran aktif di header
+                      ValueListenableBuilder<UserRole>(
+                        valueListenable: UserSession.currentRole,
+                        builder: (context, role, _) {
+                          if (role == UserRole.guest) return const SizedBox.shrink();
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: PanenaraTheme.goldAccent.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: PanenaraTheme.goldAccent.withValues(alpha: 0.4)),
+                            ),
+                            child: Text(
+                              role == UserRole.petani ? 'Peran: Petani' : 'Peran: Pembeli',
+                              style: GoogleFonts.schibstedGrotesk(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.bold,
+                                color: PanenaraTheme.goldAccent,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -80,7 +493,7 @@ class _LelangTabState extends State<LelangTab> with SingleTickerProviderStateMix
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // Tab bar
+                  // Tab bar (Bab 5.2.5 Modul)
                   TabBar(
                     controller: _tabController,
                     indicatorColor: PanenaraTheme.goldAccent,
@@ -99,7 +512,7 @@ class _LelangTabState extends State<LelangTab> with SingleTickerProviderStateMix
               ),
             ),
 
-            // Tab content
+            // Tab content (Bab 5.2.5 Modul TabBarView)
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -118,7 +531,7 @@ class _LelangTabState extends State<LelangTab> with SingleTickerProviderStateMix
 
   Widget _buildAuctionList(List<Map<String, dynamic>> items) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 80), // Padding bawah agar tidak tertutup FAB
       itemCount: items.length,
       itemBuilder: (ctx, i) => _lelangCard(items[i]),
     );
@@ -239,7 +652,22 @@ class _LelangTabState extends State<LelangTab> with SingleTickerProviderStateMix
             width: double.infinity,
             height: 36,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                if (data['buttonText'] == 'Ajukan Penawaran') {
+                  _handleBidAttempt(data);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Fitur pengingat lelang telah diaktifkan!',
+                        style: GoogleFonts.schibstedGrotesk(color: Colors.white),
+                      ),
+                      backgroundColor: PanenaraTheme.primaryGreen,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: data['buttonColor'] as Color,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

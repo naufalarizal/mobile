@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/panenara_theme.dart';
+import '../helpers/user_session.dart';
 
 class DaftarPembeliScreen extends StatefulWidget {
   const DaftarPembeliScreen({super.key});
@@ -105,8 +106,20 @@ class _DaftarPembeliScreenState extends State<DaftarPembeliScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: () {
+                  // Mengubah status akun menjadi Pembeli Terverifikasi (RBAC)
+                  UserSession.setRole(UserRole.pembeli);
                   Navigator.pop(ctx);
                   Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Pendaftaran berhasil! Akun Anda aktif sebagai Pembeli (Dapat mengikuti penawaran lelang).',
+                        style: GoogleFonts.schibstedGrotesk(color: Colors.white),
+                      ),
+                      backgroundColor: PanenaraTheme.primaryGreen,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                 },
                 child: const Text('Kembali ke Beranda', style: TextStyle(color: Colors.white)),
               ),
