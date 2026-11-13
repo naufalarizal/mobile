@@ -16,8 +16,9 @@ class _DaftarPembeliScreenState extends State<DaftarPembeliScreen> {
   // 3: Selfie Memegang e-KTP (Langkah 3 dari 5 - 60% Selesai)
   // 4: Legalitas Usaha (Langkah 4 dari 5 - 80% Selesai)
   // 5: Konfirmasi Pendaftaran Pembeli (Langkah 5 dari 5 - 100% Selesai)
+  // 6: Halaman Sukses / Dokumen Terkirim (Tidak dihitung dalam progress bar)
   int _currentStep = 1;
-  final int _totalSteps = 5;
+  final int _totalSteps = 5; // Progress bar hanya 5 langkah
 
   // Uploaded state flags
   bool _ktpUploaded = false;
@@ -95,93 +96,33 @@ class _DaftarPembeliScreenState extends State<DaftarPembeliScreen> {
     if (_currentStep < _totalSteps) {
       setState(() => _currentStep++);
     } else {
-      _showSuccessDialog();
+      // Langkah 5 selesai -> Pindah ke halaman sukses (step 6, bukan popup)
+      setState(() => _currentStep = 6);
+      UserSession.setRole(UserRole.pembeli);
     }
   }
 
   void _prevStep() {
-    if (_currentStep > 1) {
+    if (_currentStep == 6) {
+      // Dari halaman sukses, kembali ke Beranda
+      Navigator.of(context).pop();
+    } else if (_currentStep > 1) {
       setState(() => _currentStep--);
     } else {
       Navigator.of(context).pop();
     }
   }
 
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E3C2A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: PanenaraTheme.primaryGreen,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_rounded, color: Colors.white, size: 40),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Pendaftaran Pembeli Terkirim!',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.bricolageGrotesque(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Akun pembeli Anda sedang diverifikasi. Anda dapat langsung meninjau katalog lelang komoditas.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.schibstedGrotesk(
-                fontSize: 12.5,
-                color: Colors.white70,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: PanenaraTheme.primaryGreen,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: () {
-                  // Mengubah status akun menjadi Pembeli Terverifikasi (RBAC)
-                  UserSession.setRole(UserRole.pembeli);
-                  Navigator.pop(ctx);
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Pendaftaran berhasil! Akun Anda aktif sebagai Pembeli (Dapat mengikuti penawaran lelang).',
-                        style: GoogleFonts.schibstedGrotesk(color: Colors.white),
-                      ),
-                      backgroundColor: PanenaraTheme.primaryGreen,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                child: const Text('Kembali ke Beranda', style: TextStyle(color: Colors.white)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Step 6 = Halaman sukses penuh (tanpa AppBar/progress bar)
+    if (_currentStep == 6) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF1B3C2B),
+        body: SafeArea(child: _buildStep6Sukses()),
+      );
+    }
+
     final double progress = _currentStep / _totalSteps;
     final int percent = (progress * 100).toInt();
 
@@ -282,6 +223,168 @@ class _DaftarPembeliScreenState extends State<DaftarPembeliScreen> {
       default:
         return _buildStep1Persiapan();
     }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // STEP 6: Halaman Sukses Pembeli (Bergaya Petani, bukan popup)
+  // ─────────────────────────────────────────────────────────────
+  Widget _buildStep6Sukses() {
+    return SingleChildScrollView(
+      key: const ValueKey(6),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+
+          // Big Success Icon
+          Container(
+            width: 90,
+            height: 90,
+            decoration: BoxDecoration(
+              color: const Color(0xFF2C6B46),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.check_rounded, color: Colors.white, size: 50),
+          ),
+          const SizedBox(height: 24),
+
+          // Title
+          Text(
+            'Dokumen Berhasil Terkirim!',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.bricolageGrotesque(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          Text(
+            'Terima kasih telah mendaftar sebagai Mitra Pembeli Panenara.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.schibstedGrotesk(
+              fontSize: 13.5,
+              color: Colors.white.withValues(alpha: 0.85),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Estimasi Verifikasi Card
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F2E6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.hourglass_top_rounded, color: Color(0xFF2C6B46), size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Estimasi Verifikasi',
+                            style: GoogleFonts.bricolageGrotesque(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: PanenaraTheme.textDark,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Biasanya selesai dalam 1-2 hari kerja',
+                            style: GoogleFonts.schibstedGrotesk(
+                              fontSize: 12.5,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const Divider(height: 1),
+                const SizedBox(height: 14),
+                _infoRow('Nomor Pengajuan', '#MITRA-PBL-202611'),
+                const SizedBox(height: 8),
+                _infoRow('Status Berkas', 'Sedang Ditinjau Tim Verifikator'),
+                const SizedBox(height: 8),
+                _infoRow('Notifikasi', 'Akan dikirimkan via WhatsApp'),
+                const SizedBox(height: 8),
+                _infoRow('Akses Lelang', 'Tersedia setelah verifikasi selesai'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // Tombol Kembali ke Beranda
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Pendaftaran berhasil! Akun Anda aktif sebagai Pembeli (Dapat mengikuti penawaran lelang).',
+                      style: GoogleFonts.schibstedGrotesk(color: Colors.white),
+                    ),
+                    backgroundColor: PanenaraTheme.primaryGreen,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: PanenaraTheme.primaryGreen,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              child: Text(
+                'Kembali ke Beranda',
+                style: GoogleFonts.schibstedGrotesk(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -1146,6 +1249,34 @@ class _DaftarPembeliScreenState extends State<DaftarPembeliScreen> {
   }
 
   // Row anti overflow dengan Expanded & text ellipsis
+  /// Helper: baris info dua kolom (label - nilai) untuk kartu estimasi
+  Widget _infoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.schibstedGrotesk(
+            fontSize: 12.5,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: GoogleFonts.schibstedGrotesk(
+              fontSize: 12.5,
+              fontWeight: FontWeight.bold,
+              color: PanenaraTheme.textDark,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _reviewRow(String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
