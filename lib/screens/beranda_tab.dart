@@ -770,29 +770,43 @@ class BerandaTab extends StatelessWidget {
                         ),
                         const SizedBox(height: 18),
 
-                        // 2 Pilihan Tombol (Sesuai Peran Aktif & Larangan Pendaftaran Silang)
-                        Row(
-                          children: [
-                            // KARTU SISI KIRI (Petani / Lelang Hasil Tani / Terkunci jika Pembeli)
-                            Expanded(
-                              child: _buildRoleCard(
-                                context: context,
-                                currentRole: currentRole,
-                                isPetaniCard: true,
+                        // ── Kartu Aksi Peran (Adaptif) ─────────────
+                        // Jika sudah punya peran aktif: tampilkan 1 kartu penuh (tidak ada kartu terkunci).
+                        // Jika tamu (guest): tampilkan 2 kartu pilihan (Daftar Petani & Daftar Pembeli).
+                        if (currentRole == UserRole.guest) ...[
+                          // TAMU: 2 tombol sejajar
+                          Row(
+                            children: [
+                              // Kartu Daftar sebagai Petani
+                              Expanded(
+                                child: _buildRoleCard(
+                                  context: context,
+                                  currentRole: currentRole,
+                                  isPetaniCard: true,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 14),
-
-                            // KARTU SISI KANAN (Pembeli / Ikuti Lelang / Terkunci jika Petani)
-                            Expanded(
-                              child: _buildRoleCard(
-                                context: context,
-                                currentRole: currentRole,
-                                isPetaniCard: false,
+                              const SizedBox(width: 14),
+                              // Kartu Daftar sebagai Pembeli
+                              Expanded(
+                                child: _buildRoleCard(
+                                  context: context,
+                                  currentRole: currentRole,
+                                  isPetaniCard: false,
+                                ),
                               ),
+                            ],
+                          ),
+                        ] else ...[
+                          // PETANI atau PEMBELI: 1 tombol fitur utama, penuh lebar
+                          SizedBox(
+                            width: double.infinity,
+                            child: _buildRoleCard(
+                              context: context,
+                              currentRole: currentRole,
+                              isPetaniCard: currentRole == UserRole.petani,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ],
                     ),
                   );
